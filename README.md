@@ -1,6 +1,6 @@
 # ReScript Webpack Project Template
 
-The only official ReScript starter template.
+ReScript simple template with webpack and tailwindCss.
 
 ## Installation
 
