@@ -12,7 +12,7 @@ var initialState = {
 
 function board(self, action, _state) {
   if (action) {
-    return Game.toggleTile(self, action._0);
+    return Game.toggleTile(self, action._1, action._0);
   } else {
     return Game.makeRandomGrid(Config.nbrows, Config.nbcols);
   }

@@ -6,22 +6,37 @@ import * as React from "react";
 function Case(Props) {
   var cell = Props.cell;
   var onToggle = Props.onToggle;
-  var url = cell.seen ? (
-      cell.isMine ? (require('../sprites/bomb.png')) : (
-          cell.nbm === 0 ? (require('../sprites/empty.png')) : (require(`../sprites/${cell.nbm}.png`))
+  var match = cell.seen;
+  var match$1 = cell.flag;
+  var match$2 = cell.isMine;
+  var match$3 = cell.nbm;
+  var url = match ? (
+      match$1 ? (require('../sprites/flag.png')) : (
+          match$2 ? (require('../sprites/bomb.png')) : (
+              match$3 === 0 ? (require('../sprites/empty.png')) : (require(`../sprites/${cell.nbm}.png`))
+            )
         )
-    ) : (require('../sprites/empty.png'));
+    ) : (require('../sprites/normal.png'));
   var handleMouseEvent = React.useCallback((function (callback) {
           return function (e) {
             if (e.nativeEvent.which === 1) {
-              return Curry._1(callback, undefined);
+              return Curry._1(callback, false);
+            }
+            
+          };
+        }), []);
+  var handleContextMenu = React.useCallback((function (callback) {
+          return function (e) {
+            if (e.nativeEvent.which === 3) {
+              return Curry._1(callback, true);
             }
             
           };
         }), []);
   return React.createElement("div", {
               className: "border-1 case-item border-black rounded-sm",
-              onClick: Curry._1(handleMouseEvent, onToggle)
+              onClick: Curry._1(handleMouseEvent, onToggle),
+              onContextMenu: Curry._1(handleContextMenu, onToggle)
             }, React.createElement("img", {
                   src: url
                 }));

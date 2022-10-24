@@ -8,13 +8,14 @@ import * as React from "react";
 function Mineswepper(Props) {
   var match = React.useReducer(Model.Reducers.root, Model.initialState);
   var dispatch = match[1];
-  var handleToggleTile = React.useCallback((function (y) {
-          return function (x) {
+  var handleToggleTile = React.useCallback((function (param) {
+          return function (isflag) {
             return Curry._1(dispatch, /* Toggle */{
                         _0: [
-                          y,
-                          x
-                        ]
+                          param[0],
+                          param[1]
+                        ],
+                        _1: isflag
                       });
           };
         }), []);

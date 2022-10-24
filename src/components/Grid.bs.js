@@ -13,8 +13,11 @@ function Grid(Props) {
             var key = "" + x + "-" + y;
             return React.createElement(Case.make, {
                         cell: cellState,
-                        onToggle: (function (param) {
-                            Curry._2(onToggle, y, x);
+                        onToggle: (function (isFlag) {
+                            Curry._2(onToggle, [
+                                  y,
+                                  x
+                                ], isFlag);
                           }),
                         key: key
                       });

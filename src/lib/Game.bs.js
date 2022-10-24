@@ -137,20 +137,34 @@ function makeRandomGrid(width$p, height$p) {
   return borad;
 }
 
-function toggleTile(board, param) {
+function toggleAll(board) {
+  iterGrid((function (param, param$1, param$2) {
+          Caml_array.get(Caml_array.get(board, param[0]), param[1]).seen = true;
+        }), board);
+  return board;
+}
+
+function toggleTile(board, $staropt$star, param) {
   var j$p = param[1];
   var i$p = param[0];
-  if (Caml_array.get(Caml_array.get(board, i$p), j$p).nbm === 0 && !Caml_array.get(Caml_array.get(board, i$p), j$p).seen) {
+  var isFlag = $staropt$star !== undefined ? $staropt$star : false;
+  if (isFlag && !Caml_array.get(Caml_array.get(board, i$p), j$p).seen) {
+    Caml_array.get(Caml_array.get(board, i$p), j$p).flag = true;
+    Caml_array.get(Caml_array.get(board, i$p), j$p).seen = true;
+  } else if (Caml_array.get(Caml_array.get(board, i$p), j$p).isMine) {
+    toggleAll(board);
+  } else if (Caml_array.get(Caml_array.get(board, i$p), j$p).nbm === 0 && (!Caml_array.get(Caml_array.get(board, i$p), j$p).seen || Caml_array.get(Caml_array.get(board, i$p), j$p).flag)) {
     Caml_array.get(Caml_array.get(board, i$p), j$p).seen = true;
     var mines = getNeighbours(board, [
           i$p,
           j$p
         ]);
     Belt_List.forEach(mines, (function (point) {
-            return toggleTile(board, point.id);
+            return toggleTile(board, undefined, point.id);
           }));
   } else {
     Caml_array.get(Caml_array.get(board, i$p), j$p).seen = true;
+    Caml_array.get(Caml_array.get(board, i$p), j$p).flag = false;
   }
   return board;
 }
@@ -175,6 +189,7 @@ export {
   getNeighbours ,
   getNearMines ,
   makeRandomGrid ,
+  toggleAll ,
   toggleTile ,
 }
 /* IntCmp Not a pure module */

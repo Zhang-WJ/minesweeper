@@ -1,14 +1,12 @@
 module R = React
 module A = Belt.Array
 
-open Config
-
 @react.component
 let make = (~data: Game.board, ~onToggle) => {
   let renderTile = R.useCallback0((y, x, cellState: Game.cell) => {
     let key = j`$x-$y`
 
-    <Case cell={cellState} key onToggle={_ => onToggle(y, x)} />
+    <Case cell={cellState} key onToggle={isFlag => onToggle((y, x), isFlag)} />
   })
 
   let renderRow = R.useCallback0((y, row) =>

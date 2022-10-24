@@ -91,13 +91,25 @@ let makeRandomGrid = (width': int, height': int): board => {
   borad
 }
 
-let rec toggleTile = (board: board, (i', j')) => {
-  if board[i'][j'].nbm == 0 && !board[i'][j'].seen {
+let toggleAll = board => {
+  board |> iterGrid(((i, j), _, _) => board[i][j].seen = true)
+  board
+}
+
+let rec toggleTile = (board: board, ~isFlag=false, (i', j')) => {
+  if isFlag && !board[i'][j'].seen {
+    board[i'][j'].flag = true
+    board[i'][j'].seen = true
+  } else if board[i'][j'].isMine {
+    toggleAll(board) |> ignore
+  } else if board[i'][j'].nbm == 0 && (!board[i'][j'].seen || board[i'][j'].flag) {
     board[i'][j'].seen = true
     let mines = getNeighbours(board, (i', j'))
     L.forEach(mines, point => toggleTile(board, point.id))
   } else {
     board[i'][j'].seen = true
+    board[i'][j'].flag = false
   }
+
   board
 }
