@@ -14,7 +14,7 @@ module.exports = {
         directory: path.join(__dirname, 'dist'),
       },
       compress: true,
-      port: 9000,
+      port: 8000,
     },
     module: {
         rules: [
@@ -22,6 +22,10 @@ module.exports = {
             test: /\.css$/i,
             use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
           },
+          {
+            test: /\.png$/i,
+            type: 'asset/resource',
+          }
         ],
       },
     plugins: [new HtmlWebpackPlugin({

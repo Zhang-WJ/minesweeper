@@ -2,7 +2,7 @@
   "name": "rescript webpack template",
   "version": "0.0.1",
   "scripts": {
-    "build": "rescript build",
+    "build": "npx webpack",
     "clean": "rescript clean -with-deps",
     "watch-rescript": "rescript build -w ",
     "watch-dev": "webpack serve",
