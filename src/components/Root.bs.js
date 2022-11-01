@@ -9,7 +9,7 @@ function Root(Props) {
             }, React.createElement("div", {
                   className: "text-2xl leading-6	py-10 text-gray-600 text-center"
                 }, React.createElement("span", {
-                      className: "animate-bounce inline-flex "
+                      className: "animate-bounce inline-flex"
                     }, "Mineswepper")), children);
 }
 
