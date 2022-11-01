@@ -15,5 +15,5 @@ let make = (~data: Game.board, ~onToggle) => {
     </div>
   )
 
-  <div className={``}> {data->A.mapWithIndex(renderRow)->R.array} </div>
+  <div className={"flex flex-col mx-auto"}> {data->A.mapWithIndex(renderRow)->R.array} </div>
 }

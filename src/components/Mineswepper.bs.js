@@ -4,6 +4,7 @@ import * as Grid from "./Grid.bs.js";
 import * as Curry from "rescript/lib/es6/curry.js";
 import * as Model from "../lib/Model.bs.js";
 import * as React from "react";
+import * as ResetButton from "./ResetButton.bs.js";
 
 function Mineswepper(Props) {
   var match = React.useReducer(Model.Reducers.root, Model.initialState);
@@ -19,12 +20,17 @@ function Mineswepper(Props) {
                       });
           };
         }), []);
-  return React.createElement("div", {
-              className: "container mx-auto app mt-10"
-            }, React.createElement(Grid.make, {
-                  data: match[0].board,
-                  onToggle: handleToggleTile
-                }));
+  var handleReset = React.useCallback((function (param) {
+          Curry._1(dispatch, /* Reset */0);
+        }), []);
+  return React.createElement("div", undefined, React.createElement(ResetButton.make, {
+                  reset: handleReset
+                }), React.createElement("div", {
+                  className: "container mx-auto app mt-10 flex"
+                }, React.createElement(Grid.make, {
+                      data: match[0].board,
+                      onToggle: handleToggleTile
+                    })));
 }
 
 var R;

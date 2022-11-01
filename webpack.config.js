@@ -30,7 +30,7 @@ module.exports = {
       },
     plugins: [new HtmlWebpackPlugin({
         template: "/public/index.html",
-        title: "rescript-template"
+        title: "Mineswepper"
     }),
     new MiniCssExtractPlugin({filename: "[name].css",
     chunkFilename: "[id].css",})]

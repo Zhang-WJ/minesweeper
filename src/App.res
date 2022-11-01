@@ -1,3 +1,6 @@
 %%raw("import './main.css'")
 
-let app = <Mineswepper />
+let app =
+  <Root>
+    <Mineswepper />
+  </Root>

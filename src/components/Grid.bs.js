@@ -32,7 +32,7 @@ function Grid(Props) {
           };
         }), []);
   return React.createElement("div", {
-              className: ""
+              className: "flex flex-col mx-auto"
             }, Belt_Array.mapWithIndex(data, renderRow));
 }
 
