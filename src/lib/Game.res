@@ -4,11 +4,11 @@ type point = (int, int)
 
 type cell = {
   id: point,
-  mutable mined: bool,
-  mutable seen: bool,
-  mutable flag: bool,
-  mutable nbm: int,
-  mutable isMine: bool,
+  mined: bool,
+  seen: bool,
+  flag: bool,
+  nbm: int,
+  isMine: bool,
 }
 
 type board = array<array<cell>>
@@ -17,8 +17,8 @@ module A = Belt.Array
 module S = Belt.HashSet.Int
 module L = Belt.List
 
-module IntCmp = Belt.Id.MakeComparable({
-  type t = int
+module PointCmp = Belt.Id.MakeComparable({
+  type t = (int, int)
   let cmp = Pervasives.compare
 })
 
@@ -28,10 +28,8 @@ let safeIndex = x =>
   | _ => false
   }
 
-let iterGrid = (f, board) => {
-  A.forEachWithIndex(board, (i, row) =>
-    row->A.forEachWithIndex((j, case) => f((i, j), case, board))
-  )
+let mapGrid = (f, board) => {
+  A.mapWithIndex(board, (i, row) => row->A.mapWithIndex((j, case) => f((i, j), case, board)))
 }
 
 let makeBlankGrid = (width': int, height': int): board => {
@@ -79,37 +77,57 @@ let getNearMines = (board, (i, j)) => {
 
 let makeRandomGrid = (width': int, height': int): board => {
   generate_seed()
-  let borad = makeBlankGrid(width', height')
   let random_mines =
     random_list_mines(nbcols * nbrows, nbmins)->A.map(num => (num / nbrows, mod(num, nbrows)))
 
-  random_mines->A.forEach(((i', j')) => {
-    borad[i'][j'].isMine = true
+  makeBlankGrid(width', height')
+  |> mapGrid(((x, y), case, _) => {
+    {...case, isMine: random_mines->A.some(((x', y')) => x == x' && y == y')}
   })
-
-  borad |> iterGrid(((i, j), _, _) => borad[i][j].nbm = getNearMines(borad, (i, j)))
-  borad
+  |> mapGrid(((i, j), case', board) => {...case', nbm: getNearMines(board, (i, j))})
 }
 
 let toggleAll = board => {
-  board |> iterGrid(((i, j), _, _) => board[i][j].seen = true)
-  board
+  board |> mapGrid((_, case, _) => {...case, seen: true})
 }
 
-let rec toggleTile = (board: board, ~isFlag=false, (i', j')) => {
-  if isFlag && !board[i'][j'].seen {
-    board[i'][j'].flag = true
-    board[i'][j'].seen = true
-  } else if board[i'][j'].isMine {
-    toggleAll(board) |> ignore
-  } else if board[i'][j'].nbm == 0 && (!board[i'][j'].seen || board[i'][j'].flag) {
-    board[i'][j'].seen = true
-    let mines = getNeighbours(board, (i', j'))
-    L.forEach(mines, point => toggleTile(board, point.id))
-  } else {
-    board[i'][j'].seen = true
-    board[i'][j'].flag = false
-  }
+// TODO need optimize here
+let rec getUnMinePoints = (board, point, acc) => {
+  let neighbours =
+    getNeighbours(board, point.id)->L.keep(point =>
+      L.every(acc, pos => pos != point.id && !point.isMine)
+    )
 
-  board
+  let a = point.nbm > 0 ? acc : L.concat(acc, neighbours->L.map(point => point.id))
+
+  switch neighbours->L.size > 0 && point.nbm == 0 {
+  | true => neighbours->L.map(point => getUnMinePoints(board, point, a))->L.flatten
+  | false => a
+  }
+}
+
+let toggleTile = (board: board, ~isFlag=false, cell) => {
+  switch (cell.seen, cell.isMine, isFlag) {
+  | (true, _, _) => board
+  | (false, true, false) => board |> toggleAll
+  | (false, false, false) =>
+    let needShow =
+      getUnMinePoints(board, cell, list{cell.id})
+      ->L.toArray
+      ->Belt.Set.fromArray(~id=module(PointCmp))
+      ->Belt.Set.toList
+    board |> mapGrid((_, case, _) => {
+      switch needShow->L.some(point => case.id == point) {
+      | true => {...case, seen: true}
+      | false => case
+      }
+    })
+  | (false, false, true) | (false, true, true) =>
+    board |> mapGrid((_, case, _) =>
+      switch case.id == cell.id {
+      | true => {...case, seen: true, flag: true}
+      | false => case
+      }
+    )
+  }
 }

@@ -14,10 +14,7 @@ function Grid(Props) {
             return React.createElement(Case.make, {
                         cell: cellState,
                         onToggle: (function (isFlag) {
-                            Curry._2(onToggle, [
-                                  y,
-                                  x
-                                ], isFlag);
+                            Curry._2(onToggle, cellState, isFlag);
                           }),
                         key: key
                       });

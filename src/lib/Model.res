@@ -11,7 +11,7 @@ type mode =
 
 type action =
   | Reset
-  | Toggle(Game.point, bool)
+  | Toggle(Game.cell, bool)
 
 let initialState = {board: Game.makeRandomGrid(nbrows, nbcols), isWin: false}
 
@@ -19,7 +19,7 @@ module Reducers = {
   // Module contents
   let board = (self, action, _state) =>
     switch action {
-    | Toggle(pos, isflag) => self->Game.toggleTile(pos, ~isFlag=isflag)
+    | Toggle(cell, isflag) => self->Game.toggleTile(cell, ~isFlag=isflag)
     | Reset => Game.makeRandomGrid(nbrows, nbcols)
     }
 

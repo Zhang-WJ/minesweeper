@@ -3,7 +3,7 @@ module R = React
 @react.component
 let make = () => {
   let (state, dispatch) = R.useReducer(Reducers.root, initialState)
-  let handleToggleTile = R.useCallback0(((y, x), isflag) => dispatch(Toggle((y, x), isflag)))
+  let handleToggleTile = R.useCallback0((cell, isflag) => dispatch(Toggle(cell, isflag)))
   let handleReset = R.useCallback0(() => dispatch(Reset))
 
   <div>

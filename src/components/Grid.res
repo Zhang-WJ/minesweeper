@@ -6,7 +6,7 @@ let make = (~data: Game.board, ~onToggle) => {
   let renderTile = R.useCallback0((y, x, cellState: Game.cell) => {
     let key = j`$x-$y`
 
-    <Case cell={cellState} key onToggle={isFlag => onToggle((y, x), isFlag)} />
+    <Case cell={cellState} key onToggle={isFlag => onToggle(cellState, isFlag)} />
   })
 
   let renderRow = R.useCallback0((y, row) =>

@@ -9,13 +9,10 @@ import * as ResetButton from "./ResetButton.bs.js";
 function Mineswepper(Props) {
   var match = React.useReducer(Model.Reducers.root, Model.initialState);
   var dispatch = match[1];
-  var handleToggleTile = React.useCallback((function (param) {
+  var handleToggleTile = React.useCallback((function (cell) {
           return function (isflag) {
             return Curry._1(dispatch, /* Toggle */{
-                        _0: [
-                          param[0],
-                          param[1]
-                        ],
+                        _0: cell,
                         _1: isflag
                       });
           };

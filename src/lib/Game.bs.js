@@ -4,6 +4,7 @@ import * as Curry from "rescript/lib/es6/curry.js";
 import * as Config from "./Config.bs.js";
 import * as Random from "rescript/lib/es6/random.js";
 import * as Belt_Id from "rescript/lib/es6/belt_Id.js";
+import * as Belt_Set from "rescript/lib/es6/belt_Set.js";
 import * as Caml_obj from "rescript/lib/es6/caml_obj.js";
 import * as Belt_List from "rescript/lib/es6/belt_List.js";
 import * as Belt_Array from "rescript/lib/es6/belt_Array.js";
@@ -13,7 +14,7 @@ import * as Belt_HashSetInt from "rescript/lib/es6/belt_HashSetInt.js";
 
 var cmp = Caml_obj.compare;
 
-var IntCmp = Belt_Id.MakeComparable({
+var PointCmp = Belt_Id.MakeComparable({
       cmp: cmp
     });
 
@@ -27,15 +28,15 @@ function safeIndex(x) {
   }
 }
 
-function iterGrid(f, board) {
-  Belt_Array.forEachWithIndex(board, (function (i, row) {
-          Belt_Array.forEachWithIndex(row, (function (j, $$case) {
-                  Curry._3(f, [
-                        i,
-                        j
-                      ], $$case, board);
-                }));
-        }));
+function mapGrid(f, board) {
+  return Belt_Array.mapWithIndex(board, (function (i, row) {
+                return Belt_Array.mapWithIndex(row, (function (j, $$case) {
+                              return Curry._3(f, [
+                                          i,
+                                          j
+                                        ], $$case, board);
+                            }));
+              }));
 }
 
 function makeBlankGrid(width$p, height$p) {
@@ -116,57 +117,127 @@ function getNearMines(board, param) {
 
 function makeRandomGrid(width$p, height$p) {
   generate_seed(undefined);
-  var borad = makeBlankGrid(width$p, height$p);
   var random_mines = Belt_Array.map(random_list_mines(Math.imul(Config.nbcols, Config.nbrows), Config.nbmins), (function (num) {
           return [
                   Caml_int32.div(num, Config.nbrows),
                   Caml_int32.mod_(num, Config.nbrows)
                 ];
         }));
-  Belt_Array.forEach(random_mines, (function (param) {
-          Caml_array.get(Caml_array.get(borad, param[0]), param[1]).isMine = true;
-        }));
-  iterGrid((function (param, param$1, param$2) {
-          var j = param[1];
-          var i = param[0];
-          Caml_array.get(Caml_array.get(borad, i), j).nbm = getNearMines(borad, [
-                i,
-                j
-              ]);
-        }), borad);
-  return borad;
+  return mapGrid((function (param, case$p, board) {
+                return {
+                        id: case$p.id,
+                        mined: case$p.mined,
+                        seen: case$p.seen,
+                        flag: case$p.flag,
+                        nbm: getNearMines(board, [
+                              param[0],
+                              param[1]
+                            ]),
+                        isMine: case$p.isMine
+                      };
+              }), mapGrid((function (param, $$case, param$1) {
+                    var y = param[1];
+                    var x = param[0];
+                    return {
+                            id: $$case.id,
+                            mined: $$case.mined,
+                            seen: $$case.seen,
+                            flag: $$case.flag,
+                            nbm: $$case.nbm,
+                            isMine: Belt_Array.some(random_mines, (function (param) {
+                                    if (x === param[0]) {
+                                      return y === param[1];
+                                    } else {
+                                      return false;
+                                    }
+                                  }))
+                          };
+                  }), makeBlankGrid(width$p, height$p)));
 }
 
 function toggleAll(board) {
-  iterGrid((function (param, param$1, param$2) {
-          Caml_array.get(Caml_array.get(board, param[0]), param[1]).seen = true;
-        }), board);
-  return board;
+  return mapGrid((function (param, $$case, param$1) {
+                return {
+                        id: $$case.id,
+                        mined: $$case.mined,
+                        seen: true,
+                        flag: $$case.flag,
+                        nbm: $$case.nbm,
+                        isMine: $$case.isMine
+                      };
+              }), board);
 }
 
-function toggleTile(board, $staropt$star, param) {
-  var j$p = param[1];
-  var i$p = param[0];
-  var isFlag = $staropt$star !== undefined ? $staropt$star : false;
-  if (isFlag && !Caml_array.get(Caml_array.get(board, i$p), j$p).seen) {
-    Caml_array.get(Caml_array.get(board, i$p), j$p).flag = true;
-    Caml_array.get(Caml_array.get(board, i$p), j$p).seen = true;
-  } else if (Caml_array.get(Caml_array.get(board, i$p), j$p).isMine) {
-    toggleAll(board);
-  } else if (Caml_array.get(Caml_array.get(board, i$p), j$p).nbm === 0 && (!Caml_array.get(Caml_array.get(board, i$p), j$p).seen || Caml_array.get(Caml_array.get(board, i$p), j$p).flag)) {
-    Caml_array.get(Caml_array.get(board, i$p), j$p).seen = true;
-    var mines = getNeighbours(board, [
-          i$p,
-          j$p
-        ]);
-    Belt_List.forEach(mines, (function (point) {
-            return toggleTile(board, undefined, point.id);
-          }));
+function getUnMinePoints(board, point, acc) {
+  var neighbours = Belt_List.keep(getNeighbours(board, point.id), (function (point) {
+          return Belt_List.every(acc, (function (pos) {
+                        if (Caml_obj.notequal(pos, point.id)) {
+                          return !point.isMine;
+                        } else {
+                          return false;
+                        }
+                      }));
+        }));
+  var a = point.nbm > 0 ? acc : Belt_List.concat(acc, Belt_List.map(neighbours, (function (point) {
+                return point.id;
+              })));
+  if (Belt_List.size(neighbours) > 0 && point.nbm === 0) {
+    return Belt_List.flatten(Belt_List.map(neighbours, (function (point) {
+                      return getUnMinePoints(board, point, a);
+                    })));
   } else {
-    Caml_array.get(Caml_array.get(board, i$p), j$p).seen = true;
-    Caml_array.get(Caml_array.get(board, i$p), j$p).flag = false;
+    return a;
   }
-  return board;
+}
+
+function toggleTile(board, isFlagOpt, cell) {
+  var isFlag = isFlagOpt !== undefined ? isFlagOpt : false;
+  var match = cell.seen;
+  var match$1 = cell.isMine;
+  if (match) {
+    return board;
+  }
+  if (match$1) {
+    if (!isFlag) {
+      return toggleAll(board);
+    }
+    
+  } else if (!isFlag) {
+    var needShow = Belt_Set.toList(Belt_Set.fromArray(Belt_List.toArray(getUnMinePoints(board, cell, {
+                      hd: cell.id,
+                      tl: /* [] */0
+                    })), PointCmp));
+    return mapGrid((function (param, $$case, param$1) {
+                  if (Belt_List.some(needShow, (function (point) {
+                            return Caml_obj.equal($$case.id, point);
+                          }))) {
+                    return {
+                            id: $$case.id,
+                            mined: $$case.mined,
+                            seen: true,
+                            flag: $$case.flag,
+                            nbm: $$case.nbm,
+                            isMine: $$case.isMine
+                          };
+                  } else {
+                    return $$case;
+                  }
+                }), board);
+  }
+  return mapGrid((function (param, $$case, param$1) {
+                if (Caml_obj.equal($$case.id, cell.id)) {
+                  return {
+                          id: $$case.id,
+                          mined: $$case.mined,
+                          seen: true,
+                          flag: true,
+                          nbm: $$case.nbm,
+                          isMine: $$case.isMine
+                        };
+                } else {
+                  return $$case;
+                }
+              }), board);
 }
 
 var A;
@@ -179,9 +250,9 @@ export {
   A ,
   S ,
   L ,
-  IntCmp ,
+  PointCmp ,
   safeIndex ,
-  iterGrid ,
+  mapGrid ,
   makeBlankGrid ,
   generate_seed ,
   random_list_mines ,
@@ -190,6 +261,7 @@ export {
   getNearMines ,
   makeRandomGrid ,
   toggleAll ,
+  getUnMinePoints ,
   toggleTile ,
 }
-/* IntCmp Not a pure module */
+/* PointCmp Not a pure module */
